@@ -1,0 +1,72 @@
+
+f_delta=function(x){
+abs(x-1)*exp(-x)
+}
+delta=integrate(f_delta,0,Inf)$value
+P_true=delta/2                         
+
+set.seed(2014)
+n=30
+alpha=c(0.01,0.05,0.1)
+count=1
+
+for (i in 1:3){
+
+   chisq=vector()
+
+   for(j in 1:5000){
+    
+       x = rexp(n,1)
+
+      P1= mean(abs(x-mean(x)))/(2*mean(x))               
+      P2=sapply(1:n, function(i) mean(abs(x[-i]-mean(x[-i])))/(2*mean(x[-i])))
+      V=n*P1-(n-1)*P2
+      V_bar=mean(V)
+ 
+      ## 
+      l_theta=function(P){
+
+           b=V-P
+           #NEWTON'S method to find lambda
+           f=function(lambda){sum(b/(1+lambda*b))}
+           df=function(lambda){-sum((b/(1+lambda*b))^2)}
+
+           tol=1e-10
+           lambda=P
+           while(abs(f(lambda))>tol){lambda=lambda-f(lambda)/df(lambda)}
+           l=2*sum(log(abs(1+lambda*(V-P))))
+           l
+           }
+
+ 
+       P_s=seq(V_bar, P_true, length=1000)
+       l_thetas= sapply(P_s,l_theta)
+  
+       count=count+1
+       print(count)
+  
+       L=l_thetas[l_thetas<=qchisq(1-alpha[i],1)]
+       P_choose=P_s[l_thetas<=qchisq(1-alpha[i],1)]
+       
+       h=V_bar+(P_choose-V_bar)*(1+L/(2*n))
+       P.final=h[which.min(abs(h-P_true))]
+       b1=V-P.final
+ 
+      #NEWTON'S method to find lambda2
+      f=function(lambda2){sum(b1/(1+lambda2*b1))}
+      df=function(lambda2){-sum((b1/(1+lambda2*b1))^2)}
+
+      tol=1e-10
+      lambda2=0.4
+      while(abs(f(lambda2))>tol){lambda2=lambda2-f(lambda2)/df(lambda2)}
+
+  ##
+     chisq[j]=2*sum(log(abs(1+lambda2*b1)))
+     }
+
+  index=(chisq<=qchisq(1-alpha[i],1))
+  coverage[i]=sum(index)/5000
+  }
+#n=30
+coverage
+

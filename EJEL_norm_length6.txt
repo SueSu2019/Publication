@@ -1,0 +1,94 @@
+set.seed(2014)
+n=30
+alpha=c(0.01,0.05,0.1)
+count=0
+meanlength=vector()
+
+for (i in 1:3){
+   length=vector()
+   for(j in 1:50){
+
+     x = rnorm(n,4,1)
+
+     P1= mean(abs(x-mean(x)))/(2*mean(x))                 #Estimate of Pietra ratio
+     P2=sapply(1:n, function(i) mean(abs(x[-i]-mean(x[-i])))/(2*mean(x[-i])))
+     V=n*P1-(n-1)*P2
+     V_bar=mean(V)
+
+    
+         P= seq(0,1,length.out=1000)
+         for (m in 1:1000)
+                          { P_choose2=vector()
+                            l_theta=function(P1)
+                                                  {
+
+                                                      b=V-P1
+                                                      #NEWTON'S method to find lambda
+                                                      f=function(lambda){sum(b/(1+lambda*b))}
+                                                      df=function(lambda){-sum((b/(1+lambda*b))^2)}
+
+                                                      tol=1e-6
+                                                       lambda=P1
+                                                       while(abs(f(lambda))>tol){lambda=lambda-f(lambda)/df(lambda)}
+                                                       l=2*sum(log(abs(1+lambda*(V-P1))))
+                                                       l
+                                                   }
+
+      
+                            P1_s=seq(V_bar, P[m], length=1000) 
+                            l_thetas= sapply(P1_s,l_theta)
+        
+                            L=l_thetas[l_thetas<=qchisq(1-alpha[i],1)]
+                            P_choose1=P1_s[l_thetas<=qchisq(1-alpha[i],1)]
+       
+                            h=V_bar+(P_choose1-V_bar)*(1+L/(2*n))  
+                            P_choose2[m]=h[which.min(abs(h-P))]
+                            count=count+1
+                            print(count)}
+
+       
+       f_log=function(P2){
+                          b1=V-P2
+                          #NEWTON'S method to find lambda2
+                          f=function(lambda2){sum(b1/(1+lambda2*b1))}
+                          df=function(lambda2){-sum((b1/(1+lambda2*b1))^2)}
+
+                          tol=1e-6
+                          lambda2=P2
+                          while(abs(f(lambda2))>tol){lambda2=lambda2-f(lambda2)/df(lambda2)}
+  
+                         2*sum(log(abs(1+lambda2*b1)))-qchisq(1-alpha[i],1)
+                         }
+
+
+  
+      flogs = sapply(P_choose2,f_log)
+      P_choose3 = P_choose2[which.min(flogs)]
+ 
+
+      up=max(P_choose2)
+      low=min(P_choose2)
+      
+      P_up = uniroot(f_log,c(P_choose3,up))$root
+      P_low = uniroot(f_log,c(low,P_choose2))$root
+      length[j]= P_up - P_low
+  }
+
+
+
+  meanlength[i]=mean(length)
+}
+ meanlength
+
+
+
+
+
+
+
+
+
+
+
+
+

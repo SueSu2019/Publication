@@ -1,0 +1,93 @@
+f_delta=function(x){
+abs(x-1)*exp(-x)
+}
+delta=integrate(f_delta,0,Inf)$value
+P_true=delta/2                          
+
+n=30
+set.seed(2013)
+CI_90=matrix(0,1000,8)
+CI_95=matrix(0,1000,8)
+CI_99=matrix(0,1000,8)
+
+for(j in 1:1000){
+
+P<- function(x,i)  mean(abs(x[i]-mean(x[i])))/(2*mean(x[i]))
+x = rexp(n,1)
+P.boot <- boot(x, P, R = 999)
+CI=boot.ci(P.boot, conf = c(0.90, 0.95, 0.99),
+        type = c("norm", "basic", "perc", "bca"))
+
+CI_norm=CI$normal
+CI_basic=CI$basic
+CI_perc=CI$percent
+CI_bca=CI$bca
+CI_90[j,]=c(CI_norm[7], CI_norm[4],CI_basic[13], CI_basic[10],CI_perc[13], CI_perc[10],CI_bca[13],CI_bca[10])
+CI_95[j,]=c(CI_norm[8], CI_norm[5],CI_basic[14], CI_basic[11],CI_perc[14], CI_perc[11],CI_bca[14],CI_bca[11])
+CI_99[j,]=c(CI_norm[9], CI_norm[6],CI_basic[15], CI_basic[12],CI_perc[15], CI_perc[12],CI_bca[15],CI_bca[12])
+}
+
+#averagelength
+L90_norm=mean(CI_90[,1]-CI_90[,2])
+L90_basic=mean(CI_90[,3]-CI_90[,4])
+L90_perc=mean(CI_90[,5]-CI_90[,6])
+L90_bca=mean(CI_90[,7]-CI_90[,8])
+
+
+L95_norm=mean(CI_95[,1]-CI_95[,2])
+L95_basic=mean(CI_95[,3]-CI_95[,4])
+L95_perc=mean(CI_95[,5]-CI_95[,6])
+L95_bca=mean(CI_95[,7]-CI_95[,8])
+
+
+L99_norm=mean(CI_99[,1]-CI_99[,2])
+L99_basic=mean(CI_99[,3]-CI_99[,4])
+L99_perc=mean(CI_99[,5]-CI_99[,6])
+L99_bca=mean(CI_99[,7]-CI_99[,8])
+
+c(L90_norm,L90_basic,L90_perc,L90_bca)
+c(L95_norm,L95_basic,L95_perc,L95_bca)
+c(L99_norm,L99_basic,L99_perc,L99_bca)
+
+#coverage
+c901=0
+c902=0
+c903=0
+c904=0
+
+c951=0
+c952=0
+c953=0
+c954=0
+
+c991=0
+c992=0
+c993=0
+c994=0
+
+for(i in 1:1000){
+if ((P_true>CI_90[i,2])&(P_true<CI_90[i,1])){c901=c901+1}
+if ((P_true>CI_90[i,4])&(P_true<CI_90[i,3])){c902=c902+1}
+if ((P_true>CI_90[i,6])&(P_true<CI_90[i,5])){c903=c903+1}
+if ((P_true>CI_90[i,8])&(P_true<CI_90[i,7])){c904=c904+1}
+
+if ((P_true>CI_95[i,2])&(P_true<CI_95[i,1])){c951=c951+1}
+if ((P_true>CI_95[i,4])&(P_true<CI_95[i,3])){c952=c952+1}
+if ((P_true>CI_95[i,6])&(P_true<CI_95[i,5])){c953=c953+1}
+if ((P_true>CI_95[i,8])&(P_true<CI_95[i,7])){c954=c954+1}
+
+if ((P_true>CI_99[i,2])&(P_true<CI_99[i,1])){c991=c991+1}
+if ((P_true>CI_99[i,4])&(P_true<CI_99[i,3])){c992=c992+1}
+if ((P_true>CI_99[i,6])&(P_true<CI_99[i,5])){c993=c993+1}
+if ((P_true>CI_99[i,8])&(P_true<CI_99[i,7])){c994=c994+1}
+}
+
+#n=30
+c(c901/1000, c902/1000, c903/1000,c904/1000)
+c(c951/1000, c952/1000, c953/1000,c954/1000)
+c(c991/1000, c992/1000, c993/1000,c994/1000)
+
+c(L90_norm,L90_basic,L90_perc,L90_bca)
+c(L95_norm,L95_basic,L95_perc,L95_bca)
+c(L99_norm,L99_basic,L99_perc,L99_bca)
+

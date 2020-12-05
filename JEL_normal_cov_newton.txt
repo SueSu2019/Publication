@@ -1,0 +1,38 @@
+
+f_delta=function(x){
+abs(x-1)*exp(-(x-1)^2/2)/sqrt(2*pi)
+}
+delta=integrate(f_delta,-Inf,Inf)$value
+P_true=delta/2                          
+
+set.seed(2014)
+n=30
+alpha=0.01
+length=vector()
+chisq=vector()
+
+for(j in 1:5000){
+x = rnorm(n,1,1)
+
+P1= mean(abs(x-mean(x)))/(2*mean(x))                 #Estimate of Pietra ratio
+P2=sapply(1:n, function(i) mean(abs(x[-i]-mean(x[-i])))/(2*mean(x[-i])))
+V=n*P1-(n-1)*P2
+
+b=V-P_true
+
+
+#NEWTON'S method to find lambda
+f=function(lambda){sum(b/(1+lambda*b))}
+df=function(lambda){-sum((b/(1+lambda*b))^2)}
+
+tol=1e-10
+lambda=0.3
+while(abs(f(lambda))>tol){lambda=lambda-f(lambda)/df(lambda)}
+
+chisq[j]=2*sum(log(abs(1+lambda*b)))
+
+}
+index=(chisq<=qchisq(1-alpha,1))
+coverage=sum(index)/5000
+coverage
+P_true

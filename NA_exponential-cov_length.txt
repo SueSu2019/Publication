@@ -1,0 +1,44 @@
+
+
+f_delta=function(x){
+abs(x-1)*exp(-x)
+}
+delta=integrate(f_delta,0,Inf)$value
+P_true=delta/2                          
+
+n=30
+alpha=0.01
+set.seed(2013)
+c=0
+length=vector()
+
+for(j in 1:5000){
+x = rexp(n,1)
+xbar = mean(x)
+D = mean(abs(x-xbar))/2
+P=D/xbar                   #Estimate of Pietra ratio
+
+index=(x>xbar)
+p1=sum((x[index]-xbar)^2)/n
+p2=sum((x[index==0]-xbar)^2)/n
+p=1-sum(index)/n
+
+v_squre=p^2*p1+(1-p)^2*p2-D^2
+Var=(v_squre/(xbar^2)+D^2*var(x)/(xbar^4)-2*D*(p*var(x)-p2)/(xbar^3))/n
+critical=qnorm(1-alpha/2)
+upper=P+critical*sqrt(Var)
+lower=P-critical*sqrt(Var)
+
+if ((upper>P_true) & (lower<P_true)){length[j]=upper-lower
+c=c+1}
+else{length[j]=0}
+length[j]
+c}
+
+
+coverage=c/5000
+
+coverage
+
+average_length=mean(length)
+average_length

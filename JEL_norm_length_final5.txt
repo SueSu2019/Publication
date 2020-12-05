@@ -1,0 +1,58 @@
+set.seed(2014)
+n=30
+alpha=c(0.01,0.05,0.1)
+meanlength=vector()
+count=0
+
+for (i in 1:3){length=vector()
+
+for(j in 1:5000){
+x = rnorm(n,4,1)
+
+P1= mean(abs(x-mean(x)))/(2*mean(x))                
+P2=sapply(1:n, function(i) mean(abs(x[-i]-mean(x[-i])))/(2*mean(x[-i])))
+V=n*P1-(n-1)*P2
+
+f_lambda=function(P)
+{
+b=V-P
+#NEWTON'S method to find lambda
+f=function(lambda){sum(b/(1+lambda*b))}
+df=function(lambda){-sum((b/(1+lambda*b))^2)}
+
+tol=1e-6
+lambda=P
+while(abs(f(lambda))>tol){lambda=lambda-f(lambda)/df(lambda)}
+lambda}
+
+f_log=function(P) 
+{2*sum(log(abs(1+f_lambda(P)*(V-P))))-qchisq(1-alpha[i],1)}
+
+low=0
+up=1
+P_s= seq(low,up,length.out=1000)
+flogs = sapply(P_s,f_log)
+P.choose = P_s[which.min(flogs)]
+count=count+1
+print(count)
+
+upb1=up
+lowb1=P.choose
+P_up = uniroot(f_log,c(lowb1,upb1))$root
+
+upb2 =P.choose
+lowb2 =low
+P_low = uniroot(f_log,c(lowb2,upb2))$root
+length[j]= P_up - P_low
+ }
+
+
+
+
+  meanlength[i]=mean(length)
+}
+ meanlength
+
+
+
+

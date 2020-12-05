@@ -1,0 +1,52 @@
+set.seed(2014)
+n=30
+alpha=0.01
+length=vector()
+count=0
+
+for(j in 1:5000){
+
+x = rexp(n,1)
+
+P1= mean(abs(x-mean(x)))/(2*mean(x))                 #Estimate of Pietra ratio
+P2=sapply(1:n, function(i) mean(abs(x[-i]-mean(x[-i])))/(2*mean(x[-i])))
+V=n*P1-(n-1)*P2
+
+f_log=function(P){
+
+b=V-P
+b0=mean(b)
+a=max(1,log10(n)/2)
+
+#NEWTON'S method to find lambda
+f=function(lambda){sum(b/(1+lambda*b))-a*b0/(1-lambda*a*b0)}
+df=function(lambda){-sum((b/(1+lambda*b))^2)-(a*b0/(1-lambda*a*b0))^2}
+
+tol=1e-4
+lambda=P
+while(abs(f(lambda))>tol){lambda=lambda-f(lambda)/df(lambda)}
+
+2*(sum(log(abs(1+lambda*b)))+log(abs(1+lambda*(-a)*b0)))-qchisq(1-alpha,1)
+}
+
+
+low=0
+up=1
+P_s= seq(low,up,length.out=1000)
+flogs = sapply(P_s,f_log)
+count=count+1
+print(count)
+P.choose = P_s[which.min(flogs)]
+
+upb1=up
+lowb1=P.choose
+P_up = uniroot(f_log,c(lowb1,upb1))$root
+
+upb2 =P.choose
+lowb2 =low
+P_low = uniroot(f_log,c(lowb2,upb2))$root
+length[j]= P_up - P_low
+ }
+
+meanlength=mean(length)
+meanlength
